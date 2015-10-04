@@ -9,7 +9,7 @@ import scala.language.{higherKinds, implicitConversions, reflectiveCalls}
 import scala.reflect.ClassTag
 import scalaz._
 
-object services {
+/*object services {
 
   import shapeless._
 
@@ -65,3 +65,4 @@ object services {
 
 
 }
+*/

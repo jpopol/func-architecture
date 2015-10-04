@@ -1,32 +1,36 @@
 package kraken.free
 
 import scala.language.reflectiveCalls
-import scalaz.{Coyoneda, Free, Monad}
+
+import cats.free.Free
+import cats.Functor
 
 object ops {
 
-  sealed trait Op[A]
+  sealed trait OpA[Next]
+  case class Ask[T, Next](a: () => T, next: T => Next) extends OpA[Next]
+  case class Async[T, Next](a: () => T, next: T => Next) extends OpA[Next]
+  case class Tell[T, Next](a: () => T, next: Next) extends OpA[Next]
 
-  object Op {
 
-    case class Ask[A](a: () => A) extends Op[A]
 
-    case class Async[A](a: () => A) extends Op[A]
+  type Op[A] = Free[OpA, A]
+  
+  implicit val functor: Functor[OpA] =
+    new Functor[OpA] {
+      def map[A, B](op: OpA[A])(f: A => B): OpA[B] = 
+        op match {
+          case Ask(a, next) => Ask(a, next andThen f) 
+          case Async(a, next) => Async(a, next andThen f)
+          case Tell(a, next) => Tell(a, f(next))
+        }
+    }
 
-    case class Tell[A](a: () => A) extends Op[A]
 
-  }
+  def ask[A](a: => A): Op[A] = Free.liftF(Ask[A, A](() => a, identity))
 
-  import Op._
+  def async[A](a: => A): Op[A] = Free.liftF(Async[A, A](() => a, identity))
 
-  type OpMonad[A] = Free.FreeC[Op, A]
-
-  implicit val MonadOp: Monad[OpMonad] = Free.freeMonad[({type λ[α] = Coyoneda[Op, α]})#λ]
-
-  def ask[A](a: => A): OpMonad[A] = Free.liftFC(Ask(() => a))
-
-  def async[A](a: => A): OpMonad[A] = Free.liftFC(Async(() => a))
-
-  def tell(a: => Unit): OpMonad[Unit] = Free.liftFC(Tell(() => a))
+  def tell(a: => Unit): Op[Unit] = Free.liftF(Tell(() => a, ()))
 
 }
