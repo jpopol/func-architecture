@@ -2,6 +2,7 @@ import sbt.Keys._
 
 val scalaV = "2.11.7"
 val scalazV = "7.1.3"
+val catsV = "0.3.0-SNAPSHOT"
 
 scalacOptions += "-feature"
 
@@ -22,6 +23,7 @@ resolvers ++= Seq(
   ) 
 
 libraryDependencies ++= Seq(
+  "org.spire-math" %% "cats" % catsV,
   "org.scalaz" %% "scalaz-core" % scalazV,
   "org.scalaz" %% "scalaz-effect" % scalazV,
   "org.scalaz" %% "scalaz-typelevel" % scalazV,
